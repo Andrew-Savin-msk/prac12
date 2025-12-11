@@ -9,6 +9,11 @@ class AccountRepositoryImpl implements AccountRepository {
   final AccountSecureStorageDataSource _secureStorage;
 
   AccountRepositoryImpl(this._dataSource, this._secureStorage);
+  
+  /// Инициализация: загрузить пользователей из SQLite при старте
+  Future<void> initialize() async {
+    await _dataSource.initialize();
+  }
 
   @override
   UserAccount? getCurrentUser() {
@@ -19,12 +24,12 @@ class AccountRepositoryImpl implements AccountRepository {
   bool get isLoggedIn => _dataSource.isLoggedIn;
 
   @override
-  UserAccount register({
+  Future<UserAccount> register({
     required String name,
     required String email,
     required String password,
-  }) {
-    return _dataSource.register(
+  }) async {
+    return await _dataSource.register(
       name: name,
       email: email,
       password: password,
@@ -32,11 +37,11 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  void login({
+  Future<void> login({
     required String email,
     required String password,
-  }) {
-    _dataSource.login(email: email, password: password);
+  }) async {
+    await _dataSource.login(email: email, password: password);
   }
 
   @override
@@ -52,6 +57,7 @@ class AccountRepositoryImpl implements AccountRepository {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       userId: tokens.userId,
+      userEmail: tokens.userEmail,
     );
   }
 
@@ -66,12 +72,38 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  void updateProfile({
+  Future<void> saveUserData(UserAccount user) async {
+    await _secureStorage.saveUserData(user);
+  }
+
+  @override
+  Future<void> restoreSession() async {
+    // Если пользователь уже залогинен, ничего не делаем
+    if (_dataSource.isLoggedIn) {
+      return;
+    }
+
+    // Восстанавливаем сессию ТОЛЬКО из secure storage
+    // Читаем полные данные пользователя из secure storage
+    final user = await _secureStorage.readUserData();
+    if (user == null) {
+      // Нет сохранённых данных пользователя - очищаем токены
+      await clearAuthTokens();
+      return;
+    }
+
+    // Устанавливаем пользователя как текущего
+    // Добавляем в список зарегистрированных, если его там нет
+    _dataSource.setCurrentUser(user);
+  }
+
+  @override
+  Future<void> updateProfile({
     required String name,
     required String email,
     String? avatarUrl,
-  }) {
-    _dataSource.updateProfile(
+  }) async {
+    await _dataSource.updateProfile(
       name: name,
       email: email,
       avatarUrl: avatarUrl,

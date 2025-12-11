@@ -5,6 +5,7 @@ import 'package:prac12/core/di/injection.dart';
 import 'package:prac12/ui/features/account/state/stores/profile_screen/profile_screen_store.dart';
 import 'package:prac12/domain/usecases/account/get_current_user_usecase.dart';
 import 'package:prac12/domain/usecases/account/get_auth_tokens_usecase.dart';
+import 'package:prac12/domain/usecases/account/restore_session_usecase.dart';
 import 'package:prac12/domain/usecases/account/logout_usecase.dart';
 import 'package:prac12/ui/features/goals/app_router.dart';
 
@@ -13,6 +14,7 @@ class ProfileScreen extends StatelessWidget {
       : store = ProfileScreenStore(
           getIt<GetCurrentUserUseCase>(),
           getIt<GetAuthTokensUseCase>(),
+          getIt<RestoreSessionUseCase>(),
         );
 
   final ProfileScreenStore store;

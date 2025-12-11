@@ -11,17 +11,22 @@ class RegisterUseCase {
     this._activityLogRepository,
   );
 
-  UserAccount call({
+  Future<UserAccount> call({
     required String name,
     required String email,
     required String password,
-  }) {
-    final user = _accountRepository.register(
+  }) async {
+    final user = await _accountRepository.register(
       name: name,
       email: email,
       password: password,
     );
     _activityLogRepository.logAuthLogin(email);
+    
+    // После регистрации пользователь автоматически логинится
+    // Сохраняем полные данные пользователя в secure storage для восстановления сессии
+    await _accountRepository.saveUserData(user);
+    
     return user;
   }
 }

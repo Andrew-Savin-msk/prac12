@@ -4,10 +4,12 @@ class AuthTokens {
   final String accessToken;
   final String? refreshToken;
   final String? userId;
+  final String? userEmail;
 
   AuthTokens({
     required this.accessToken,
     this.refreshToken,
     this.userId,
+    this.userEmail,
   });
 }

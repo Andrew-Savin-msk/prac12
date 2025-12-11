@@ -4,17 +4,18 @@ import 'package:prac12/core/models/account/auth_tokens.dart';
 abstract class AccountRepository {
   UserAccount? getCurrentUser();
   bool get isLoggedIn;
-  UserAccount register({
+  Future<void> initialize();
+  Future<UserAccount> register({
     required String name,
     required String email,
     required String password,
   });
-  void login({
+  Future<void> login({
     required String email,
     required String password,
   });
   void logout();
-  void updateProfile({
+  Future<void> updateProfile({
     required String name,
     required String email,
     String? avatarUrl,
@@ -22,5 +23,7 @@ abstract class AccountRepository {
   Future<void> saveAuthTokens(AuthTokens tokens);
   Future<AuthTokens?> getAuthTokens();
   Future<void> clearAuthTokens();
+  Future<void> saveUserData(UserAccount user);
+  Future<void> restoreSession();
 }
 

@@ -69,7 +69,7 @@ class EditProfileScreenStore {
 
   Future<bool> save() async {
     try {
-      _updateProfileUseCase(
+      await _updateProfileUseCase(
         name: name.trim(),
         email: email.trim(),
         avatarUrl: avatarUrl,

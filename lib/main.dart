@@ -3,6 +3,8 @@ import 'package:prac12/core/di/injection.dart';
 import 'package:prac12/ui/features/goals/app_router.dart';
 import 'package:prac12/domain/repositories/goals/goal_repository.dart';
 import 'package:prac12/data/repositories/goals/goal_repository_impl.dart';
+import 'package:prac12/domain/repositories/account/account_repository.dart';
+import 'package:prac12/data/repositories/account/account_repository_impl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +13,10 @@ void main() async {
   // Инициализируем репозиторий целей: загружаем данные из SQLite
   final goalRepository = getIt<GoalRepository>() as GoalRepositoryImpl;
   await goalRepository.initialize();
+  
+  // Инициализируем репозиторий аккаунтов: загружаем пользователей из SQLite
+  final accountRepository = getIt<AccountRepository>() as AccountRepositoryImpl;
+  await accountRepository.initialize();
   
   runApp(const MyApp());
 }

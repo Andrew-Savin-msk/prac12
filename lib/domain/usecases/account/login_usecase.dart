@@ -18,10 +18,10 @@ class LoginUseCase {
     required String email,
     required String password,
   }) async {
-    _accountRepository.login(email: email, password: password);
+    await _accountRepository.login(email: email, password: password);
     _activityLogRepository.logAuthLogin(email);
     
-    // После успешного логина сохраняем токены в secure storage
+    // После успешного логина сохраняем токены и полные данные пользователя в secure storage
     final user = _accountRepository.getCurrentUser();
     if (user != null) {
       // Создаём токены на основе данных пользователя
@@ -30,8 +30,12 @@ class LoginUseCase {
         accessToken: 'access_token_${user.id}_${DateTime.now().millisecondsSinceEpoch}',
         refreshToken: 'refresh_token_${user.id}_${DateTime.now().millisecondsSinceEpoch}',
         userId: user.id,
+        userEmail: user.email, // Сохраняем email для восстановления сессии
       );
       await _saveAuthTokensUseCase(tokens);
+      
+      // Сохраняем полные данные пользователя в secure storage для восстановления сессии
+      await _accountRepository.saveUserData(user);
     }
   }
 }

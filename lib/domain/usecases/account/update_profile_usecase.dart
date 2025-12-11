@@ -10,17 +10,23 @@ class UpdateProfileUseCase {
     this._activityLogRepository,
   );
 
-  void call({
+  Future<void> call({
     required String name,
     required String email,
     String? avatarUrl,
-  }) {
-    _accountRepository.updateProfile(
+  }) async {
+    await _accountRepository.updateProfile(
       name: name,
       email: email,
       avatarUrl: avatarUrl,
     );
     _activityLogRepository.logProfileUpdated(name, email);
+    
+    // Обновляем данные пользователя в secure storage после изменения профиля
+    final user = _accountRepository.getCurrentUser();
+    if (user != null) {
+      await _accountRepository.saveUserData(user);
+    }
   }
 }
 

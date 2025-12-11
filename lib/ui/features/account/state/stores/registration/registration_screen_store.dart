@@ -72,7 +72,7 @@ class RegistrationScreenStore {
 
   Future<bool> register() async {
     try {
-      _registerUseCase(
+      await _registerUseCase(
         name: name.trim(),
         email: email.trim(),
         password: password,
