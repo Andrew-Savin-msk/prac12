@@ -10,23 +10,50 @@ import 'package:prac12/ui/features/goals/widgets/goals_list_view.dart';
 import 'package:prac12/ui/features/goals/state/stores/goals_list/goals_list_screen_store.dart';
 import 'package:prac12/domain/usecases/goals/get_goals_usecase.dart';
 import 'package:prac12/domain/usecases/goals/delete_goal_usecase.dart';
+import 'package:prac12/domain/usecases/goals/get_saved_search_query_usecase.dart';
+import 'package:prac12/domain/usecases/goals/save_search_query_usecase.dart';
 
 
-class GoalsListScreen extends StatelessWidget {
-  GoalsListScreen({super.key})
-      : store = GoalsListScreenStore(
-          getIt<GetGoalsUseCase>(),
-          getIt<DeleteGoalUseCase>(),
-        ),
-        _searchController = TextEditingController() {
-    store.setSearchQuery('');
-    store.refresh();
+class GoalsListScreen extends StatefulWidget {
+  const GoalsListScreen({super.key});
+
+  @override
+  State<GoalsListScreen> createState() => _GoalsListScreenState();
+}
+
+class _GoalsListScreenState extends State<GoalsListScreen> {
+  late final GoalsListScreenStore store;
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    store = GoalsListScreenStore(
+      getIt<GetGoalsUseCase>(),
+      getIt<DeleteGoalUseCase>(),
+      getIt<GetSavedSearchQueryUseCase>(),
+      getIt<SaveSearchQueryUseCase>(),
+    );
+    // Синхронизируем контроллер с сохранённым значением после загрузки
+    _syncControllerWithStore();
   }
 
-  final GoalsListScreenStore store;
-  final TextEditingController _searchController;
+  Future<void> _syncControllerWithStore() async {
+    // Ждём, чтобы store успел загрузить данные асинхронно
+    await Future.delayed(const Duration(milliseconds: 50));
+    if (mounted && store.searchQuery.isNotEmpty) {
+      _searchController.text = store.searchQuery;
+    }
+  }
 
-  void _deleteGoal(BuildContext context, int index) {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _deleteGoal(int index) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -114,7 +141,7 @@ class GoalsListScreen extends StatelessWidget {
                       : GoalsListView(
                     goals: goals,
                     store: store,
-                    onDelete: (index) => _deleteGoal(context, index),
+                    onDelete: (index) => _deleteGoal(index),
                     onTap: (goal) async {
                       await context.push(
                         Routes.goalDetail,

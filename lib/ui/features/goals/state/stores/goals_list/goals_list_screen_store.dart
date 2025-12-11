@@ -3,18 +3,24 @@ import 'package:mobx/mobx.dart';
 import 'package:prac12/core/models/goals/goal_model.dart';
 import 'package:prac12/domain/usecases/goals/get_goals_usecase.dart';
 import 'package:prac12/domain/usecases/goals/delete_goal_usecase.dart';
+import 'package:prac12/domain/usecases/goals/get_saved_search_query_usecase.dart';
+import 'package:prac12/domain/usecases/goals/save_search_query_usecase.dart';
 
 class GoalsListScreenStore {
   GoalsListScreenStore(
     this._getGoalsUseCase,
     this._deleteGoalUseCase,
+    this._getSavedSearchQueryUseCase,
+    this._saveSearchQueryUseCase,
   ) {
     _hasGoals = Computed(() => goals.isNotEmpty);
-    refresh();
+    _loadSavedSearchQuery();
   }
 
   final GetGoalsUseCase _getGoalsUseCase;
   final DeleteGoalUseCase _deleteGoalUseCase;
+  final GetSavedSearchQueryUseCase _getSavedSearchQueryUseCase;
+  final SaveSearchQueryUseCase _saveSearchQueryUseCase;
 
   final Observable<String> _searchQuery = Observable('');
   String get searchQuery => _searchQuery.value;
@@ -34,6 +40,19 @@ class GoalsListScreenStore {
       searchQuery = value;
     });
     _applyFilter();
+    // Сохраняем поисковый запрос в SharedPreferences
+    _saveSearchQueryUseCase(value);
+  }
+
+  /// Загрузить сохранённый поисковый запрос при инициализации
+  Future<void> _loadSavedSearchQuery() async {
+    final savedQuery = await _getSavedSearchQueryUseCase();
+    if (savedQuery != null && savedQuery.isNotEmpty) {
+      runInAction(() {
+        searchQuery = savedQuery;
+      });
+    }
+    refresh();
   }
 
   void refresh() {

@@ -6,6 +6,7 @@ import 'package:prac12/data/datasources/focus/focus_session_local_datasource.dar
 import 'package:prac12/data/datasources/goals/goal_local_datasource.dart';
 import 'package:prac12/data/datasources/support/support_local_datasource.dart';
 import 'package:prac12/data/datasources/tips/tips_local_datasource.dart';
+import 'package:prac12/data/datasources/common/shared_prefs_data_source.dart';
 import 'package:prac12/data/repositories/account/account_repository_impl.dart';
 import 'package:prac12/data/repositories/achievements/achievement_repository_impl.dart';
 import 'package:prac12/data/repositories/activity_log/activity_log_repository_impl.dart';
@@ -36,6 +37,8 @@ import 'package:prac12/domain/usecases/goals/add_goal_usecase.dart';
 import 'package:prac12/domain/usecases/goals/delete_goal_usecase.dart';
 import 'package:prac12/domain/usecases/goals/get_goals_usecase.dart';
 import 'package:prac12/domain/usecases/goals/update_goal_subtasks_usecase.dart';
+import 'package:prac12/domain/usecases/goals/get_saved_search_query_usecase.dart';
+import 'package:prac12/domain/usecases/goals/save_search_query_usecase.dart';
 import 'package:prac12/domain/usecases/support/get_faq_items_usecase.dart';
 import 'package:prac12/domain/usecases/support/send_feedback_usecase.dart';
 import 'package:prac12/domain/usecases/tips/get_tip_by_id_usecase.dart';
@@ -45,6 +48,7 @@ final getIt = GetIt.instance;
 
 void setupDependencyInjection() {
   // Data Sources
+  getIt.registerLazySingleton<SharedPrefsDataSource>(() => SharedPrefsDataSource());
   getIt.registerLazySingleton<GoalLocalDataSource>(() => GoalLocalDataSource());
   getIt.registerLazySingleton<AccountLocalDataSource>(() => AccountLocalDataSource());
   getIt.registerLazySingleton<AchievementLocalDataSource>(() => AchievementLocalDataSource());
@@ -55,7 +59,10 @@ void setupDependencyInjection() {
 
   // Repositories
   getIt.registerLazySingleton<GoalRepository>(
-    () => GoalRepositoryImpl(getIt<GoalLocalDataSource>()),
+    () => GoalRepositoryImpl(
+      getIt<GoalLocalDataSource>(),
+      getIt<SharedPrefsDataSource>(),
+    ),
   );
   getIt.registerLazySingleton<AccountRepository>(
     () => AccountRepositoryImpl(getIt<AccountLocalDataSource>()),
@@ -102,6 +109,12 @@ void setupDependencyInjection() {
       getIt<AchievementRepository>(),
       getIt<ActivityLogRepository>(),
     ),
+  );
+  getIt.registerLazySingleton<GetSavedSearchQueryUseCase>(
+    () => GetSavedSearchQueryUseCase(getIt<GoalRepository>()),
+  );
+  getIt.registerLazySingleton<SaveSearchQueryUseCase>(
+    () => SaveSearchQueryUseCase(getIt<GoalRepository>()),
   );
 
   // Use Cases - Account
