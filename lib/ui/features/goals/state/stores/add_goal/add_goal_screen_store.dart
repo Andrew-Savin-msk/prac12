@@ -40,7 +40,7 @@ class AddGoalScreenStore {
     });
   }
 
-  void createGoal() {
+  Future<void> createGoal() async {
     if (!canSave) return;
 
     final goal = Goal(
@@ -48,7 +48,7 @@ class AddGoalScreenStore {
       deadline: deadline!,
     );
 
-    _addGoalUseCase(goal);
+    await _addGoalUseCase(goal);
 
     clear();
   }

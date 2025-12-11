@@ -1,9 +1,11 @@
 class Goal {
+  String? id;
   String title;
   DateTime deadline;
   List<Subtask> subtasks;
 
   Goal({
+    this.id,
     required this.title,
     required this.deadline,
     List<Subtask>? subtasks,

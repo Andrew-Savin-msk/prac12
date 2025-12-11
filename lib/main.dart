@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:prac12/core/di/injection.dart';
 import 'package:prac12/ui/features/goals/app_router.dart';
+import 'package:prac12/domain/repositories/goals/goal_repository.dart';
+import 'package:prac12/data/repositories/goals/goal_repository_impl.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   setupDependencyInjection();
+  
+  // Инициализируем репозиторий целей: загружаем данные из SQLite
+  final goalRepository = getIt<GoalRepository>() as GoalRepositoryImpl;
+  await goalRepository.initialize();
+  
   runApp(const MyApp());
 }
 

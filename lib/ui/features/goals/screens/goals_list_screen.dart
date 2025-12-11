@@ -39,6 +39,23 @@ class _GoalsListScreenState extends State<GoalsListScreen> {
     _syncControllerWithStore();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Обновляем список при возврате на экран
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        store.refresh();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _syncControllerWithStore() async {
     // Ждём, чтобы store успел загрузить данные асинхронно
     await Future.delayed(const Duration(milliseconds: 50));
@@ -47,11 +64,6 @@ class _GoalsListScreenState extends State<GoalsListScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   void _deleteGoal(int index) {
     showDialog(
@@ -105,7 +117,13 @@ class _GoalsListScreenState extends State<GoalsListScreen> {
           IconButton(
             tooltip: 'Выполненные',
             icon: const Icon(Icons.done_all),
-            onPressed: () => context.push(Routes.completed),
+            onPressed: () async {
+              await context.push(Routes.completed);
+              // Обновляем список после возврата с экрана выполненных целей
+              if (mounted) {
+                store.refresh();
+              }
+            },
           ),
           IconButton(
             tooltip: 'Ачивки',
@@ -157,7 +175,13 @@ class _GoalsListScreenState extends State<GoalsListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(Routes.addGoal),
+        onPressed: () async {
+          await context.push(Routes.addGoal);
+          // Обновляем список после возврата с экрана добавления цели
+          if (mounted) {
+            store.refresh();
+          }
+        },
         label: const Text('Новая цель'),
         icon: const Icon(Icons.add),
       ),

@@ -58,6 +58,7 @@ class GoalDetailScreenStore {
     final goal = currentGoal;
     if (goal == null) return;
 
+    // Вызываем асинхронно, но не ждём завершения (fire and forget)
     _updateGoalSubtasksUseCase(goal, subtasks.toList());
   }
 }

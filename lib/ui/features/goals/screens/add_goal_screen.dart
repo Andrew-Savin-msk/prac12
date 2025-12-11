@@ -33,7 +33,7 @@ class AddGoalScreen extends StatelessWidget {
     }
   }
 
-  void _save(BuildContext context) {
+  Future<void> _save(BuildContext context) async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     if (store.deadline == null) {
@@ -45,8 +45,10 @@ class AddGoalScreen extends StatelessWidget {
       return;
     }
 
-    store.createGoal();
-    context.go(Routes.goalsList);
+    await store.createGoal();
+    if (context.mounted) {
+      context.pop(); // Возвращаемся на предыдущий экран
+    }
   }
 
   @override
@@ -105,7 +107,7 @@ class AddGoalScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 FilledButton.icon(
-                  onPressed: canSave ? () => _save(context) : null,
+                  onPressed: canSave ? () async => await _save(context) : null,
                   icon: const Icon(Icons.check),
                   label: const Text('Создать цель'),
                 ),

@@ -14,8 +14,8 @@ class AddGoalUseCase {
     this._activityLogRepository,
   );
 
-  void call(Goal goal) {
-    _goalRepository.addGoal(goal);
+  Future<void> call(Goal goal) async {
+    await _goalRepository.addGoal(goal);
     final allGoals = _goalRepository.getGoals();
     _achievementRepository.onGoalCreated(allGoals);
     _achievementRepository.onGoalUpdated(allGoals);

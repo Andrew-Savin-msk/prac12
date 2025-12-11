@@ -14,12 +14,14 @@ class UpdateGoalSubtasksUseCase {
     this._activityLogRepository,
   );
 
-  void call(Goal goal, List<Subtask> subtasks) {
+  Future<void> call(Goal goal, List<Subtask> subtasks) async {
     goal.subtasks = subtasks;
     final allGoals = _goalRepository.getGoals();
     final goalIndex = allGoals.indexOf(goal);
     if (goalIndex != -1) {
       allGoals[goalIndex].subtasks = List<Subtask>.from(subtasks);
+      // Обновляем цель в SQLite
+      await _goalRepository.updateGoal(allGoals[goalIndex]);
     }
     
     final wasCompleted = goal.isCompleted;

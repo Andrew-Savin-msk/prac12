@@ -7,6 +7,7 @@ import 'package:prac12/data/datasources/goals/goal_local_datasource.dart';
 import 'package:prac12/data/datasources/support/support_local_datasource.dart';
 import 'package:prac12/data/datasources/tips/tips_local_datasource.dart';
 import 'package:prac12/data/datasources/common/shared_prefs_data_source.dart';
+import 'package:prac12/data/datasources/goals/goals_sqlite_data_source.dart';
 import 'package:prac12/data/repositories/account/account_repository_impl.dart';
 import 'package:prac12/data/repositories/achievements/achievement_repository_impl.dart';
 import 'package:prac12/data/repositories/activity_log/activity_log_repository_impl.dart';
@@ -49,6 +50,7 @@ final getIt = GetIt.instance;
 void setupDependencyInjection() {
   // Data Sources
   getIt.registerLazySingleton<SharedPrefsDataSource>(() => SharedPrefsDataSource());
+  getIt.registerLazySingleton<GoalsSqliteDataSource>(() => GoalsSqliteDataSource());
   getIt.registerLazySingleton<GoalLocalDataSource>(() => GoalLocalDataSource());
   getIt.registerLazySingleton<AccountLocalDataSource>(() => AccountLocalDataSource());
   getIt.registerLazySingleton<AchievementLocalDataSource>(() => AchievementLocalDataSource());
@@ -61,6 +63,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<GoalRepository>(
     () => GoalRepositoryImpl(
       getIt<GoalLocalDataSource>(),
+      getIt<GoalsSqliteDataSource>(),
       getIt<SharedPrefsDataSource>(),
     ),
   );
