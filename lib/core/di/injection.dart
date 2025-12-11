@@ -8,6 +8,7 @@ import 'package:prac12/data/datasources/support/support_local_datasource.dart';
 import 'package:prac12/data/datasources/tips/tips_local_datasource.dart';
 import 'package:prac12/data/datasources/common/shared_prefs_data_source.dart';
 import 'package:prac12/data/datasources/goals/goals_sqlite_data_source.dart';
+import 'package:prac12/data/datasources/account/account_secure_storage_data_source.dart';
 import 'package:prac12/data/repositories/account/account_repository_impl.dart';
 import 'package:prac12/data/repositories/achievements/achievement_repository_impl.dart';
 import 'package:prac12/data/repositories/activity_log/activity_log_repository_impl.dart';
@@ -27,6 +28,9 @@ import 'package:prac12/domain/usecases/account/login_usecase.dart';
 import 'package:prac12/domain/usecases/account/logout_usecase.dart';
 import 'package:prac12/domain/usecases/account/register_usecase.dart';
 import 'package:prac12/domain/usecases/account/update_profile_usecase.dart';
+import 'package:prac12/domain/usecases/account/save_auth_tokens_usecase.dart';
+import 'package:prac12/domain/usecases/account/get_auth_tokens_usecase.dart';
+import 'package:prac12/domain/usecases/account/clear_auth_tokens_usecase.dart';
 import 'package:prac12/domain/usecases/achievements/get_achievements_usecase.dart';
 import 'package:prac12/domain/usecases/activity_log/clear_activity_log_usecase.dart';
 import 'package:prac12/domain/usecases/activity_log/get_activity_log_usecase.dart';
@@ -51,6 +55,7 @@ void setupDependencyInjection() {
   // Data Sources
   getIt.registerLazySingleton<SharedPrefsDataSource>(() => SharedPrefsDataSource());
   getIt.registerLazySingleton<GoalsSqliteDataSource>(() => GoalsSqliteDataSource());
+  getIt.registerLazySingleton<AccountSecureStorageDataSource>(() => AccountSecureStorageDataSource());
   getIt.registerLazySingleton<GoalLocalDataSource>(() => GoalLocalDataSource());
   getIt.registerLazySingleton<AccountLocalDataSource>(() => AccountLocalDataSource());
   getIt.registerLazySingleton<AchievementLocalDataSource>(() => AchievementLocalDataSource());
@@ -68,7 +73,10 @@ void setupDependencyInjection() {
     ),
   );
   getIt.registerLazySingleton<AccountRepository>(
-    () => AccountRepositoryImpl(getIt<AccountLocalDataSource>()),
+    () => AccountRepositoryImpl(
+      getIt<AccountLocalDataSource>(),
+      getIt<AccountSecureStorageDataSource>(),
+    ),
   );
   getIt.registerLazySingleton<AchievementRepository>(
     () => AchievementRepositoryImpl(
@@ -134,6 +142,7 @@ void setupDependencyInjection() {
     () => LoginUseCase(
       getIt<AccountRepository>(),
       getIt<ActivityLogRepository>(),
+      getIt<SaveAuthTokensUseCase>(),
     ),
   );
   getIt.registerLazySingleton<LogoutUseCase>(
@@ -147,6 +156,15 @@ void setupDependencyInjection() {
       getIt<AccountRepository>(),
       getIt<ActivityLogRepository>(),
     ),
+  );
+  getIt.registerLazySingleton<SaveAuthTokensUseCase>(
+    () => SaveAuthTokensUseCase(getIt<AccountRepository>()),
+  );
+  getIt.registerLazySingleton<GetAuthTokensUseCase>(
+    () => GetAuthTokensUseCase(getIt<AccountRepository>()),
+  );
+  getIt.registerLazySingleton<ClearAuthTokensUseCase>(
+    () => ClearAuthTokensUseCase(getIt<AccountRepository>()),
   );
 
   // Use Cases - Achievements

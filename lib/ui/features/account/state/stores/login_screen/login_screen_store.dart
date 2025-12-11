@@ -45,7 +45,7 @@ class LoginScreenStore {
 
   Future<bool> login() async {
     try {
-      _loginUseCase(
+      await _loginUseCase(
         email: email.trim(),
         password: password,
       );

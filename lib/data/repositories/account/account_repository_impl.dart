@@ -1,11 +1,14 @@
 import 'package:prac12/data/datasources/account/account_local_datasource.dart';
+import 'package:prac12/data/datasources/account/account_secure_storage_data_source.dart';
 import 'package:prac12/core/models/account/user_account_model.dart';
+import 'package:prac12/core/models/account/auth_tokens.dart';
 import 'package:prac12/domain/repositories/account/account_repository.dart';
 
 class AccountRepositoryImpl implements AccountRepository {
   final AccountLocalDataSource _dataSource;
+  final AccountSecureStorageDataSource _secureStorage;
 
-  AccountRepositoryImpl(this._dataSource);
+  AccountRepositoryImpl(this._dataSource, this._secureStorage);
 
   @override
   UserAccount? getCurrentUser() {
@@ -39,6 +42,27 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   void logout() {
     _dataSource.logout();
+    // Очищаем токены при выходе
+    clearAuthTokens();
+  }
+
+  @override
+  Future<void> saveAuthTokens(AuthTokens tokens) async {
+    await _secureStorage.saveTokens(
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      userId: tokens.userId,
+    );
+  }
+
+  @override
+  Future<AuthTokens?> getAuthTokens() async {
+    return await _secureStorage.readTokens();
+  }
+
+  @override
+  Future<void> clearAuthTokens() async {
+    await _secureStorage.clearTokens();
   }
 
   @override
