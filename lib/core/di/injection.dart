@@ -13,7 +13,9 @@ import 'package:prac12/data/datasources/common/shared_prefs_data_source.dart';
 import 'package:prac12/data/datasources/goals/goals_sqlite_data_source.dart';
 import 'package:prac12/data/datasources/account/account_secure_storage_data_source.dart';
 import 'package:prac12/data/datasources/account/account_sqlite_data_source.dart';
+import 'package:prac12/core/constants/supabase_config.dart';
 import 'package:prac12/data/datasources/remote/api/dio_client.dart';
+import 'package:prac12/data/datasources/account/supabase_auth_remote_datasource.dart';
 import 'package:prac12/data/repositories/account/account_repository_impl.dart';
 import 'package:prac12/data/repositories/achievements/achievement_repository_impl.dart';
 import 'package:prac12/data/repositories/activity_log/activity_log_repository_impl.dart';
@@ -96,6 +98,24 @@ void setupDependencyInjection() {
     () => TipsRemoteDataSource(getIt<DevtoApiClient>()),
   );
 
+  // Remote Data Sources - Supabase Auth API
+  getIt.registerLazySingleton<Dio>(
+    () => createDioClient(
+      baseUrl: SupabaseConfig.authBaseUrl,
+      defaultHeaders: {
+        'apikey': SupabaseConfig.supabaseAnonKey,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      enableLogging: true,
+      enableErrorMapping: true,
+    ),
+    instanceName: 'supabase',
+  );
+  getIt.registerLazySingleton<SupabaseAuthRemoteDataSource>(
+    () => SupabaseAuthRemoteDataSource(getIt<Dio>(instanceName: 'supabase')),
+  );
+
   // Repositories
   getIt.registerLazySingleton<GoalRepository>(
     () => GoalRepositoryImpl(
@@ -108,6 +128,7 @@ void setupDependencyInjection() {
     () => AccountRepositoryImpl(
       getIt<AccountLocalDataSource>(),
       getIt<AccountSecureStorageDataSource>(),
+      getIt<SupabaseAuthRemoteDataSource>(),
     ),
   );
   getIt.registerLazySingleton<AchievementRepository>(
@@ -177,7 +198,6 @@ void setupDependencyInjection() {
     () => LoginUseCase(
       getIt<AccountRepository>(),
       getIt<ActivityLogRepository>(),
-      getIt<SaveAuthTokensUseCase>(),
     ),
   );
   getIt.registerLazySingleton<LogoutUseCase>(

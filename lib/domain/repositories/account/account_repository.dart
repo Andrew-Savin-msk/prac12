@@ -3,6 +3,7 @@ import 'package:prac12/core/models/account/auth_tokens.dart';
 
 abstract class AccountRepository {
   UserAccount? getCurrentUser();
+  Future<UserAccount> getCurrentUserFromRemote();
   bool get isLoggedIn;
   Future<void> initialize();
   Future<UserAccount> register({
@@ -14,7 +15,7 @@ abstract class AccountRepository {
     required String email,
     required String password,
   });
-  void logout();
+  Future<void> logout();
   Future<void> updateProfile({
     required String name,
     required String email,

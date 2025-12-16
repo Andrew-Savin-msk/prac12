@@ -13,10 +13,15 @@ class LoginScreen extends StatelessWidget {
   final LoginScreenStore store;
 
   Future<void> _handleLogin(BuildContext context) async {
+    print('=== LoginScreen._handleLogin START ===');
     final success = await store.login();
+    print('Login result: $success');
     if (success && context.mounted) {
+      print('Closing login screen...');
       context.pop();
+      print('Login screen closed');
     }
+    print('=== LoginScreen._handleLogin COMPLETE ===');
   }
 
   @override

@@ -6,8 +6,9 @@ class GetCurrentUserUseCase {
 
   GetCurrentUserUseCase(this._accountRepository);
 
-  UserAccount? call() {
-    return _accountRepository.getCurrentUser();
+  /// Получить текущего пользователя из Supabase (GET /user)
+  Future<UserAccount> call() async {
+    return await _accountRepository.getCurrentUserFromRemote();
   }
 }
 

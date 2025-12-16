@@ -10,8 +10,8 @@ class LogoutUseCase {
     this._activityLogRepository,
   );
 
-  void call() {
-    _accountRepository.logout();
+  Future<void> call() async {
+    await _accountRepository.logout();
     _activityLogRepository.logAuthLogout();
   }
 }

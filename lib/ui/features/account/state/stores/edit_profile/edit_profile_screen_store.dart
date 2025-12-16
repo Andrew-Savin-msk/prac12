@@ -8,13 +8,19 @@ class EditProfileScreenStore {
     this._updateProfileUseCase,
   ) {
     _canSave = Computed(() => name.isNotEmpty && email.isNotEmpty);
-    final currentUser = _getCurrentUserUseCase();
-    if (currentUser != null) {
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    try {
+      final currentUser = await _getCurrentUserUseCase();
       runInAction(() {
         name = currentUser.name;
         email = currentUser.email;
         avatarUrl = currentUser.avatarUrl;
       });
+    } catch (e) {
+      print('Error loading current user for edit: $e');
     }
   }
 

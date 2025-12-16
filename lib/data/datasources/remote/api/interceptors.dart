@@ -6,6 +6,10 @@ class LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     print('[${options.method}] ${options.uri}');
+    if (options.headers.containsKey('apikey')) {
+      final key = options.headers['apikey'] as String?;
+      print('API Key: ${key != null && key.length > 20 ? key.substring(0, 20) + "..." : key}');
+    }
     if (options.data != null) {
       final dataStr = options.data.toString();
       print('Request body: ${dataStr.length > 200 ? dataStr.substring(0, 200) + "..." : dataStr}');
@@ -23,6 +27,9 @@ class LoggingInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     print('[${err.response?.statusCode ?? 'ERROR'}] ${err.requestOptions.uri}');
     print('Error: ${err.message}');
+    if (err.response?.data != null) {
+      print('Response data: ${err.response?.data}');
+    }
     super.onError(err, handler);
   }
 }

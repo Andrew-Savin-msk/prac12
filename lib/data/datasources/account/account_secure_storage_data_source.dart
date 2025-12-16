@@ -9,7 +9,18 @@ import 'package:prac12/core/models/account/user_account_model.dart';
 class AccountSecureStorageDataSource {
   final FlutterSecureStorage _storage;
 
-  AccountSecureStorageDataSource() : _storage = const FlutterSecureStorage();
+  AccountSecureStorageDataSource() : _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+    mOptions: MacOsOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+      groupId: '6GPYCRZNS3.com.example.prac12', // Должно соответствовать keychain-access-groups в entitlements
+    ),
+  );
 
   /// Сохранить токены авторизации
   Future<void> saveTokens({
@@ -18,58 +29,91 @@ class AccountSecureStorageDataSource {
     String? userId,
     String? userEmail,
   }) async {
+    print('=== AccountSecureStorageDataSource.saveTokens START ===');
+    print('Access token length: ${accessToken.length}');
+    print('Refresh token: ${refreshToken != null ? "exists (${refreshToken.length} chars)" : "null"}');
+    print('User ID: $userId');
+    print('User email: $userEmail');
     try {
+      print('Writing access token to secure storage...');
       await _storage.write(
         key: SecureStorageKeys.accessToken,
         value: accessToken,
       );
+      print('Access token written');
       
       if (refreshToken != null) {
+        print('Writing refresh token to secure storage...');
         await _storage.write(
           key: SecureStorageKeys.refreshToken,
           value: refreshToken,
         );
+        print('Refresh token written');
       }
       
       if (userId != null) {
+        print('Writing user ID to secure storage...');
         await _storage.write(
           key: SecureStorageKeys.userId,
           value: userId,
         );
+        print('User ID written');
       }
       
       if (userEmail != null) {
+        print('Writing user email to secure storage...');
         await _storage.write(
           key: SecureStorageKeys.userEmail,
           value: userEmail,
         );
+        print('User email written');
       }
-    } catch (e) {
-      print('Ошибка при сохранении токенов в secure storage: $e');
+      print('=== AccountSecureStorageDataSource.saveTokens SUCCESS ===');
+    } catch (e, stackTrace) {
+      print('ERROR при сохранении токенов в secure storage: $e');
+      print('Stack trace: $stackTrace');
+      rethrow;
     }
   }
 
   /// Прочитать токены авторизации
   Future<AuthTokens?> readTokens() async {
+    print('=== AccountSecureStorageDataSource.readTokens START ===');
     try {
+      print('Reading access token from secure storage...');
       final accessToken = await _storage.read(key: SecureStorageKeys.accessToken);
+      print('Access token read: ${accessToken != null ? "exists (${accessToken.length} chars)" : "null"}');
       
       if (accessToken == null) {
+        print('Access token is null, returning null');
+        print('=== AccountSecureStorageDataSource.readTokens NULL ===');
         return null;
       }
       
+      print('Reading refresh token from secure storage...');
       final refreshToken = await _storage.read(key: SecureStorageKeys.refreshToken);
-      final userId = await _storage.read(key: SecureStorageKeys.userId);
-      final userEmail = await _storage.read(key: SecureStorageKeys.userEmail);
+      print('Refresh token read: ${refreshToken != null ? "exists" : "null"}');
       
-      return AuthTokens(
+      print('Reading user ID from secure storage...');
+      final userId = await _storage.read(key: SecureStorageKeys.userId);
+      print('User ID read: $userId');
+      
+      print('Reading user email from secure storage...');
+      final userEmail = await _storage.read(key: SecureStorageKeys.userEmail);
+      print('User email read: $userEmail');
+      
+      final tokens = AuthTokens(
         accessToken: accessToken,
         refreshToken: refreshToken,
         userId: userId,
         userEmail: userEmail,
       );
-    } catch (e) {
-      print('Ошибка при чтении токенов из secure storage: $e');
+      print('=== AccountSecureStorageDataSource.readTokens SUCCESS ===');
+      return tokens;
+    } catch (e, stackTrace) {
+      print('ERROR при чтении токенов из secure storage: $e');
+      print('Stack trace: $stackTrace');
+      print('=== AccountSecureStorageDataSource.readTokens ERROR ===');
       return null;
     }
   }
