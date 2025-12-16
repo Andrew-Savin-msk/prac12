@@ -108,8 +108,15 @@ GoRouter buildRouter() {
         path: Routes.tipDetail,
         name: 'tipDetail',
         builder: (context, state) {
-          final article = state.extra as TipArticle;
-          return TipDetailScreen(article: article);
+          // Принимаем ID статьи (int) или объект TipArticle для обратной совместимости
+          final extra = state.extra;
+          if (extra is int) {
+            return TipDetailScreen(articleId: extra);
+          } else if (extra is TipArticle) {
+            return TipDetailScreen(article: extra);
+          } else {
+            throw Exception('Invalid extra data for tipDetail route');
+          }
         },
       ),
       GoRoute(

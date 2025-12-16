@@ -1,13 +1,13 @@
 import 'package:prac12/core/models/tips/tip_article_model.dart';
 import 'package:prac12/domain/repositories/tips/tips_repository.dart';
 
-class GetTipByIdUseCase {
+class GetTipsWithTagUseCase {
   final TipsRepository _repository;
 
-  GetTipByIdUseCase(this._repository);
+  GetTipsWithTagUseCase(this._repository);
 
-  Future<TipArticle> call(int id) async {
-    return await _repository.getTipById(id);
+  Future<List<TipArticle>> call({String? tag}) async {
+    return await _repository.getTips(tag: tag);
   }
 }
 

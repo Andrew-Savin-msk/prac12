@@ -3,12 +3,18 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:prac12/core/di/injection.dart';
 import 'package:prac12/ui/features/tips/state/tips_list_screen_store.dart';
-import 'package:prac12/domain/usecases/tips/get_tips_usecase.dart';
+import 'package:prac12/domain/usecases/tips/get_tips_with_tag_usecase.dart';
+import 'package:prac12/domain/usecases/tips/get_latest_tips_usecase.dart';
+import 'package:prac12/domain/usecases/tips/get_tip_tags_usecase.dart';
 import 'package:prac12/ui/features/goals/app_router.dart';
 
 class TipsListScreen extends StatelessWidget {
   TipsListScreen({super.key})
-      : store = TipsListScreenStore(getIt<GetTipsUseCase>());
+      : store = TipsListScreenStore(
+          getIt<GetTipsWithTagUseCase>(),
+          getIt<GetLatestTipsUseCase>(),
+          getIt<GetTipTagsUseCase>(),
+        );
 
   final TipsListScreenStore store;
 
@@ -22,6 +28,77 @@ class TipsListScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // Переключатель Latest / All
+            Observer(
+              builder: (_) => Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Все статьи'),
+                      selected: !store.showLatest,
+                      onSelected: (selected) {
+                        if (selected) {
+                          store.loadArticles();
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Последние'),
+                      selected: store.showLatest,
+                      onSelected: (selected) {
+                        if (selected) {
+                          store.loadLatestArticles();
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Фильтр по тегам
+            Observer(
+              builder: (_) => SizedBox(
+                height: 40,
+                child: store.tags.isEmpty
+                    ? const SizedBox.shrink()
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: store.tags.length,
+                        itemBuilder: (context, index) {
+                          final tag = store.tags[index];
+                          final isSelected = store.selectedTag == tag.name;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: FilterChip(
+                              label: Text(tag.name),
+                              selected: isSelected,
+                              selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                              checkmarkColor: Theme.of(context).primaryColor,
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? Theme.of(context).primaryColor
+                                    : null,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                              onSelected: (_) {
+                                // Если тег уже выбран - снимаем выбор, иначе выбираем его
+                                if (isSelected) {
+                                  store.loadArticles(tag: null);
+                                } else {
+                                  store.loadArticles(tag: tag.name);
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ),
+            const SizedBox(height: 8),
             // Поисковая строка
             TextField(
               decoration: const InputDecoration(
@@ -35,6 +112,9 @@ class TipsListScreen extends StatelessWidget {
             Expanded(
               child: Observer(
                 builder: (_) {
+                  if (store.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
                   final items = store.filteredArticles;
 
                   if (items.isEmpty) {
@@ -95,10 +175,14 @@ class TipsListScreen extends StatelessWidget {
                           ),
                           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                           onTap: () {
-                            context.push(
-                              Routes.tipDetail,
-                              extra: article,
-                            );
+                            // Передаем ID статьи (int) вместо объекта
+                            final articleId = int.tryParse(article.id);
+                            if (articleId != null) {
+                              context.push(
+                                Routes.tipDetail,
+                                extra: articleId,
+                              );
+                            }
                           },
                         ),
                       );

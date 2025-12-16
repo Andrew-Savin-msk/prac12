@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:prac12/data/datasources/account/account_local_datasource.dart';
 import 'package:prac12/data/datasources/achievements/achievement_local_datasource.dart';
@@ -6,10 +7,13 @@ import 'package:prac12/data/datasources/focus/focus_session_local_datasource.dar
 import 'package:prac12/data/datasources/goals/goal_local_datasource.dart';
 import 'package:prac12/data/datasources/support/support_local_datasource.dart';
 import 'package:prac12/data/datasources/tips/tips_local_datasource.dart';
+import 'package:prac12/data/datasources/tips/tips_remote_datasource.dart';
+import 'package:prac12/data/datasources/tips/devto_api_client.dart';
 import 'package:prac12/data/datasources/common/shared_prefs_data_source.dart';
 import 'package:prac12/data/datasources/goals/goals_sqlite_data_source.dart';
 import 'package:prac12/data/datasources/account/account_secure_storage_data_source.dart';
 import 'package:prac12/data/datasources/account/account_sqlite_data_source.dart';
+import 'package:prac12/data/datasources/remote/api/dio_client.dart';
 import 'package:prac12/data/repositories/account/account_repository_impl.dart';
 import 'package:prac12/data/repositories/achievements/achievement_repository_impl.dart';
 import 'package:prac12/data/repositories/activity_log/activity_log_repository_impl.dart';
@@ -50,6 +54,10 @@ import 'package:prac12/domain/usecases/support/get_faq_items_usecase.dart';
 import 'package:prac12/domain/usecases/support/send_feedback_usecase.dart';
 import 'package:prac12/domain/usecases/tips/get_tip_by_id_usecase.dart';
 import 'package:prac12/domain/usecases/tips/get_tips_usecase.dart';
+import 'package:prac12/domain/usecases/tips/get_latest_tips_usecase.dart';
+import 'package:prac12/domain/usecases/tips/get_tip_tags_usecase.dart';
+import 'package:prac12/domain/usecases/tips/get_tip_comments_usecase.dart';
+import 'package:prac12/domain/usecases/tips/get_tips_with_tag_usecase.dart';
 
 final getIt = GetIt.instance;
 
@@ -68,6 +76,25 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<FocusSessionLocalDataSource>(() => FocusSessionLocalDataSource());
   getIt.registerLazySingleton<TipsLocalDataSource>(() => TipsLocalDataSource());
   getIt.registerLazySingleton<SupportLocalDataSource>(() => SupportLocalDataSource());
+
+  // Remote Data Sources - DEV.to API
+  getIt.registerLazySingleton<Dio>(
+    () => createDioClient(
+      baseUrl: 'https://dev.to/api',
+      defaultHeaders: {
+        'User-Agent': 'WorkspApp/1.0',
+      },
+      enableLogging: true,
+      enableErrorMapping: true,
+    ),
+    instanceName: 'devto',
+  );
+  getIt.registerLazySingleton<DevtoApiClient>(
+    () => DevtoApiClient(getIt<Dio>(instanceName: 'devto')),
+  );
+  getIt.registerLazySingleton<TipsRemoteDataSource>(
+    () => TipsRemoteDataSource(getIt<DevtoApiClient>()),
+  );
 
   // Repositories
   getIt.registerLazySingleton<GoalRepository>(
@@ -96,7 +123,10 @@ void setupDependencyInjection() {
     () => FocusSessionRepositoryImpl(getIt<FocusSessionLocalDataSource>()),
   );
   getIt.registerLazySingleton<TipsRepository>(
-    () => TipsRepositoryImpl(getIt<TipsLocalDataSource>()),
+    () => TipsRepositoryImpl(
+      getIt<TipsLocalDataSource>(),
+      getIt<TipsRemoteDataSource>(),
+    ),
   );
   getIt.registerLazySingleton<SupportRepository>(
     () => SupportRepositoryImpl(getIt<SupportLocalDataSource>()),
@@ -211,6 +241,18 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<GetTipByIdUseCase>(
     () => GetTipByIdUseCase(getIt<TipsRepository>()),
+  );
+  getIt.registerLazySingleton<GetLatestTipsUseCase>(
+    () => GetLatestTipsUseCase(getIt<TipsRepository>()),
+  );
+  getIt.registerLazySingleton<GetTipTagsUseCase>(
+    () => GetTipTagsUseCase(getIt<TipsRepository>()),
+  );
+  getIt.registerLazySingleton<GetTipCommentsUseCase>(
+    () => GetTipCommentsUseCase(getIt<TipsRepository>()),
+  );
+  getIt.registerLazySingleton<GetTipsWithTagUseCase>(
+    () => GetTipsWithTagUseCase(getIt<TipsRepository>()),
   );
 
   // Use Cases - Support
